@@ -1,0 +1,6 @@
+venv/*
+*.ipynb
+*.zip
+data/*
+*/__pycache__/*
+swin_tiny_patch4_window7_224/*
