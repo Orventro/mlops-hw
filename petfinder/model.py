@@ -1,10 +1,12 @@
+import numpy as np
+import pytorch_lightning as pl
+import timm
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
-import numpy as np
-import timm
-import torch.optim as optim #Он используется! В конфиге прописан
+import torch.optim as optim  # Он используется! В конфиге прописан
+
 from petfinder.util import get_default_transforms
+
 
 def mixup(x: torch.Tensor, y: torch.Tensor, alpha: float = 1.0):
     assert alpha > 0, "alpha should be larger than 0"
@@ -15,6 +17,7 @@ def mixup(x: torch.Tensor, y: torch.Tensor, alpha: float = 1.0):
     mixed_x = lam * x + (1 - lam) * x[rand_index, :]
     target_a, target_b = y, y[rand_index]
     return mixed_x, target_a, target_b, lam
+
 
 class Model(pl.LightningModule):
     def __init__(self, cfg):
@@ -31,8 +34,7 @@ class Model(pl.LightningModule):
         )
         num_features = self.backbone.num_features
         self.fc = nn.Sequential(
-            nn.Dropout(0.5), 
-            nn.Linear(num_features, self.cfg.model.output_dim)
+            nn.Dropout(0.5), nn.Linear(num_features, self.cfg.model.output_dim)
         )
 
     def forward(self, x):
@@ -41,29 +43,30 @@ class Model(pl.LightningModule):
         return out
 
     def training_step(self, batch):
-        loss, pred, labels = self.__share_step(batch, 'train')
-        return {'loss': loss, 'pred': pred, 'labels': labels}
-        
+        loss, pred, labels = self.__share_step(batch, "train")
+        return {"loss": loss, "pred": pred, "labels": labels}
+
     def validation_step(self, batch):
-        loss, pred, labels = self.__share_step(batch, 'val')
-        return {'pred': pred, 'labels': labels}
-    
+        loss, pred, labels = self.__share_step(batch, "val")
+        return {"pred": pred, "labels": labels}
+
     def __share_step(self, batch, mode):
         images, labels = batch
         labels = labels.float() / 100.0
         images = self.transform[mode](images)
-        
-        if torch.rand(1)[0] < 0.5 and mode == 'train':
+
+        if torch.rand(1)[0] < 0.5 and mode == "train":
             mix_images, target_a, target_b, lam = mixup(images, labels, alpha=0.5)
             logits = self.forward(mix_images).squeeze(1)
-            loss = self._criterion(logits, target_a) * lam + \
-                (1 - lam) * self._criterion(logits, target_b)
+            loss = self._criterion(logits, target_a) * lam + (
+                1 - lam
+            ) * self._criterion(logits, target_b)
         else:
             logits = self.forward(images).squeeze(1)
             loss = self._criterion(logits, labels)
-        
-        pred = logits.sigmoid().detach().cpu() * 100.
-        labels = labels.detach().cpu() * 100.
+
+        pred = logits.sigmoid().detach().cpu() * 100.0
+        labels = labels.detach().cpu() * 100.0
         return loss, pred, labels
 
     def configure_optimizers(self):
@@ -71,7 +74,6 @@ class Model(pl.LightningModule):
             self.parameters(), **self.cfg.optimizer.params
         )
         scheduler = eval(self.cfg.scheduler.name)(
-            optimizer,
-            **self.cfg.scheduler.params
+            optimizer, **self.cfg.scheduler.params
         )
         return [optimizer], [scheduler]

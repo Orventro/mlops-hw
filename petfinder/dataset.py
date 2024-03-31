@@ -1,7 +1,8 @@
 import torchvision.transforms as T
 from pytorch_lightning import LightningDataModule
-from torchvision.io import read_image
 from torch.utils.data import DataLoader, Dataset
+from torchvision.io import read_image
+
 
 class PetfinderDataset(Dataset):
     def __init__(self, df, image_size=224):
@@ -22,6 +23,7 @@ class PetfinderDataset(Dataset):
             label = self._y[idx]
             return image, label
         return image
+
 
 class PetfinderDataModule(LightningDataModule):
     def __init__(
