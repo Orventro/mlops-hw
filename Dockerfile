@@ -1,8 +1,9 @@
 FROM python:3.10-bookworm
 
-RUN apt install gcc
+RUN apt update && apt install gcc
 
-COPY train.py infer.py requirements.txt load.sh ./
+COPY requirements.txt ./
 RUN pip install --upgrade pip && pip install --default-timeout=1000 -r requirements.txt
 
+COPY train.py infer.py load.sh ./
 COPY petfinder/ ./petfinder
