@@ -1,1 +1,0 @@
-kaggle competitions download -c petfinder-pawpularity-score
