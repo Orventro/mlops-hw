@@ -5,3 +5,5 @@ scikit_learn==1.4.1.post1
 timm==0.9.16
 torch==2.2.1
 torchvision==0.17.1
+dvc==3.50.0
+dvc-gdrive==3.0.1
